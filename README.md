@@ -38,8 +38,10 @@ Voldemort replies with versions of a value, it's up to the client to resolve the
 
 You can override the default behavior and perform a custom resolution of the conflict, here's how to do so:
 
-  client = VoldemortClient.new("test", "localhost:6666") do |versions|
-    versions.first # just return the first version for example
-  end
+client = VoldemortClient.new("test", "localhost:6666") do |versions|
+
+versions.first # just return the first version for example
+
+end
 
 Copyright (c) 2010 Alejandro Crosa, released under the MIT license
