@@ -5,6 +5,8 @@ voldemort-rb
 
 Since the communication between the client and the server is done using protocol buffers you'll need the ruby_protobuf gem found at http://code.google.com/p/ruby-protobuf/. 
 
+  sudo gem install ruby_protobuf
+
 Examples
 =======
 
