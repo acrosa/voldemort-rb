@@ -128,7 +128,17 @@ class TCPConnection < Connection
   def receive
     raw_size = self.socket.recv(4)
     size = raw_size.unpack('N')
-    self.socket.recv(size[0])
+    
+    # Read until we get to size
+    read = 0
+    buffer = ""
+    
+    while read < size[0] and size[0] > 0
+      data = self.socket.recv(size[0] - read)
+      buffer << data
+      read += data.length
+    end
+    return buffer
   rescue
     self.reconnect!
   end

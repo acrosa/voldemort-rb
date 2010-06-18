@@ -1,4 +1,5 @@
 require 'rexml/document'
+require 'json'
 
 class Connection
   include REXML
@@ -29,9 +30,14 @@ class Connection
   end
 
   def bootstrap
-    response = self.get_from("metadata", "cluster.xml", false)
-    xml = response[1][0][1]
-    self.nodes = self.parse_nodes_from(xml)
+    cluster_response = self.get_from("metadata", "cluster.xml", false)
+    cluster_xml = cluster_response[1][0][1]
+    self.nodes = self.parse_nodes_from(cluster_xml)
+    
+    stores_response = self.get_from("metadata", "stores.xml", false)
+    stores_xml = stores_response[1][0][1]
+    self.schema = parse_schema_from(stores_xml)
+    
     self.connect_to_random_node
   rescue StandardError => e
     raise("There was an error trying to bootstrap from the specified servers: #{e}")
@@ -62,6 +68,12 @@ class Connection
       nodes << node
     end
     nodes
+  end
+  
+  def parse_schema_from(xml)
+    doc = REXML::Document.new(xml)
+    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
+    schema = JSON.parse(schema_doc.elements['value-serializer'].elements['schema-info'].text)
   end
 
   def protocol_version
