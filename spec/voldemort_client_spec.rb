@@ -1,5 +1,4 @@
 require File.dirname(__FILE__) + '/spec_helper'
-require 'lib/protos/voldemort-client.pb'
 
 include Voldemort
 

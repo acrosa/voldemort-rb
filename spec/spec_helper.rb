@@ -1,2 +1,2 @@
 require 'rubygems'
-require 'voldemort_client'
+require 'voldemort-rb'
