@@ -36,7 +36,6 @@ class Connection
     
     stores_response = self.get_from("metadata", "stores.xml", false)
     stores_xml = stores_response[1][0][1]
-    self.schema = parse_schema_from(stores_xml)
     
     self.connect_to_random_node
   rescue StandardError => e
@@ -68,12 +67,6 @@ class Connection
       nodes << node
     end
     nodes
-  end
-  
-  def parse_schema_from(xml)
-    doc = REXML::Document.new(xml)
-    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
-    schema = JSON.parse(schema_doc.elements['value-serializer'].elements['schema-info'].text)
   end
 
   def protocol_version
