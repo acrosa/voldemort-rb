@@ -1,6 +1,7 @@
 require File.join(File.dirname(__FILE__), "connection", "voldemort_node")
 require File.join(File.dirname(__FILE__), "connection", "connection")
 require File.join(File.dirname(__FILE__), "connection", "tcp_connection")
+require File.join(File.dirname(__FILE__), "voldemort-serializer")
 
 class VoldemortClient
   attr_accessor :connection

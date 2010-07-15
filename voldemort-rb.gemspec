@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
        "README.md",
        "Rakefile",
        "lib/voldemort-rb.rb",
+       "lib/voldemort-serializer.rb",
        "lib/connection/connection.rb",
        "lib/connection/tcp_connection.rb",
        "lib/connection/voldemort_node.rb",
