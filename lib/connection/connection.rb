@@ -41,6 +41,13 @@ class Connection
   rescue StandardError => e
     raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
+  
+#  def parse_schema_from(xml)
+#    doc = REXML::Document.new(xml)
+#    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
+#    schema = JSON.parse(schema_doc.elements['value-serializer'].elements['schema-info'].text)	
+#  end
+  
 
   def connect_to_random_node
     nodes = self.nodes.sort_by { rand }

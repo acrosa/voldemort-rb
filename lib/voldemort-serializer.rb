@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'json'
+require 'voldemort-rb'
 
 class VoldemortSerializer
   attr_accessor :has_version
@@ -69,7 +70,7 @@ class VoldemortSerializer
     end
     
     bytes << write(object, type_def)
-
+    
     return bytes
   end
 
@@ -77,13 +78,13 @@ class VoldemortSerializer
     bytes = ''
     
     if(type.kind_of? Hash)
-    	if(!object.kind_of? Hash)
+    	if(object != nil && !object.kind_of?(Hash))
     	  # TODO throw exception
     	else
     	  bytes << write_map(object, type)
     	end
     elsif(type.kind_of? Array)
-    	if(!object.kind_of? Array)
+    	if(object != nil && !object.kind_of?(Array))
     	  # TODO throw exception
     	else
     	  bytes << write_list(object, type)
@@ -114,11 +115,11 @@ class VoldemortSerializer
     bytes = ''
     
     if(object == nil)
-      bytes << 0xFF # bits: 1111 1111 (-1 for a byte)
+      bytes << [BYTE_MIN_VAL].pack('c')
     elsif(object)
-      bytes << 0x1
+      bytes << [0x1].pack('c')
     else
-      bytes << 0x0
+      bytes << [0x0].pack('c')
     end
     
     return bytes
@@ -170,7 +171,9 @@ class VoldemortSerializer
         object = INT_MIN_VAL
       end
       
-      bytes << [object].pack('i')
+      # reverse here to switch little endian to big endian
+      # this is because pack('N') is choking on 'bigint', wtf?
+      bytes << [object].pack('i').reverse
     end
     
     return bytes
@@ -261,17 +264,21 @@ class VoldemortSerializer
     bytes = ''
     
     if(object == nil)
-      bytes << 0xFF # bits: 1111 1111 (-1 for a byte)
+      bytes << [-1].pack('c')
     else
-      bytes << 0x1
+      bytes << [1].pack('c')
+      
       if(object.length != type.length)
         # TODO throw exception here.. invalid map serialization, expected: but got 
       else
-        type.each_pair do |key, val|
+        type.sort.each do |type_pair|
+          key = type_pair.first
+          subtype = type_pair.last
+          
           if(!object.has_key? key)
             # TODO throw "missing property exception"
           else
-            bytes << write(object[key], val)
+            bytes << write(object[key], subtype)
           end
         end
       end
@@ -344,12 +351,15 @@ class VoldemortSerializer
   end
   
   def read_map(bytes, type)
-    if(read_slice(1, bytes) == -1)
+    # convert to char to string, and string to int
+    if(read_slice(1, bytes).unpack('c').to_s.to_i == -1)
       return nil
     else
       object = {}
       
-      type.each_pair do |name, sub_type|
+      type.sort.each do |type_pair|
+        name = type_pair.first
+        sub_type = type_pair.last
         object[name] = read(bytes, sub_type)
       end
       
@@ -371,7 +381,7 @@ class VoldemortSerializer
   end
   
   def read_boolean(bytes)
-    b = read_slice(1, bytes).first.to_i
+    b = read_slice(1, bytes).unpack('c').first
     
     if(b < 0)
       return nil
@@ -403,7 +413,9 @@ class VoldemortSerializer
   end
   
   def read_int32(bytes)
-    i = read_slice(4, bytes).unpack("i").first.to_i
+    # reverse here to switch little endian to big endian
+    # this is because pack('N') is choking on 'bigint', wtf?
+    i = read_slice(4, bytes).reverse.unpack("i").first.to_i
     
     if(i == INT_MIN_VAL)
       return nil
@@ -509,6 +521,8 @@ assert(double_invert(get_serde("['int32']"), []), [])
 assert(double_invert(get_serde("{'a': 'string', 'b': 'int32'}"), {'a' => 'hai', 'b' => 23}), {'a' => 'hai', 'b' => 23})
 assert(double_invert(get_serde("{'a': 'int8', 'b': ['int32']}"), {'a' => nil, 'b' => [23, 45000]}), {'a' => nil, 'b' => [23, 45000]})
 assert(double_invert(get_serde("'date'"), Time.at(1279216126, 000)), Time.at(1279216126, 000))
+assert(double_invert(get_serde("'boolean'"), true), true)
+assert(double_invert(get_serde("'boolean'"), false), false)
 
 # test nulls
 assert(double_invert(get_serde("'string'"), nil), nil)
@@ -519,3 +533,55 @@ assert(double_invert(get_serde("'int64'"), nil), nil)
 assert(double_invert(get_serde("'float32'"), nil), nil)
 assert(double_invert(get_serde("'float64'"), nil), nil)
 assert(double_invert(get_serde("'date'"), nil), nil)
+assert(double_invert(get_serde("'boolean'"), nil), nil)
+assert(double_invert(get_serde("['int32']"), nil), nil)
+assert(double_invert(get_serde("{'a': 'string'}"), nil), nil)
+
+v = VoldemortClient.new('json-test', 'localhost:6666')
+
+kserde = get_serde("'int32'")
+vserde = get_serde("{
+                \"string\": 'string',
+                \"int8\": 'int8',
+                \"int16\": \"int16\",
+                \"int32\": 'int32',
+                \"int64\": \"int64\",
+                'float32': 'float32',
+                'float64': 'float64',
+                \"list\": ['int32'],
+                'map': {\"key\": 'string'},
+                \"date\": 'date',
+                'boolean': 'boolean'
+}")
+=begin
+v.put(kserde.to_bytes(1213), vserde.to_bytes({
+                "string" => 'a',
+                "int8" => 1,
+                "int16" => 1,
+                "int32" => 1,
+                "int64" => 1,
+                'float32' => 1,
+                'float64' => 1,
+                "list" => [1, 2],
+                'map' => {"key" => 'a'},
+                "date" => Time.now,
+                'boolean' => true
+}))
+=end
+v.put(kserde.to_bytes(1213), vserde.to_bytes({
+                "string" => nil,
+                "int8" => nil,
+                "int16" => nil,
+                "int32" => nil,
+                "int64" => nil,
+                'float32' => nil,
+                'float64' => nil,
+                "list" => nil,
+                'map' => nil,
+                "date" => nil,
+                'boolean' => nil
+}))
+
+d = vserde.to_object(v.get(kserde.to_bytes(1213)))
+d = JSON.generate(d)
+puts "-- #{d}"
