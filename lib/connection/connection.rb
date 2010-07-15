@@ -10,6 +10,10 @@ class Connection
   attr_accessor :connected_node # The VoldemortNode we are connected to.
   attr_accessor :request_count  # Used to track the number of request a node receives.
   attr_accessor :request_limit_per_node # Limit the number of request per node.
+  attr_accessor :key_serializer_schemas
+  attr_accessor :value_serializer_schemas
+  attr_accessor :key_serializer_type
+  attr_accessor :value_serializer_type
 
   STATUS_OK = "ok"
   PROTOCOL  = "pb0"
@@ -37,18 +41,16 @@ class Connection
     stores_response = self.get_from("metadata", "stores.xml", false)
     stores_xml = stores_response[1][0][1]
     
+    self.key_serializer_type = parse_schema_type(stores_xml, 'key-serializer')
+    self.value_serializer_type = parse_schema_type(stores_xml, 'value-serializer')
+    self.key_serializer_schemas = parse_schema_from(stores_xml, 'key-serializer')
+    self.value_serializer_schemas = parse_schema_from(stores_xml, 'value-serializer')
+    
     self.connect_to_random_node
   rescue StandardError => e
     raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
   
-#  def parse_schema_from(xml)
-#    doc = REXML::Document.new(xml)
-#    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
-#    schema = JSON.parse(schema_doc.elements['value-serializer'].elements['schema-info'].text)	
-#  end
-  
-
   def connect_to_random_node
     nodes = self.nodes.sort_by { rand }
     for node in nodes do
@@ -58,6 +60,23 @@ class Connection
         return node
       end
     end
+  end
+  
+  def parse_schema_type(xml, serializer = 'value-serializer')
+    doc = REXML::Document.new(xml)
+    return XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type").text
+  end
+  
+  def parse_schema_from(xml, serializer = 'value-serializer')
+    parsed_schemas = {}
+    doc = REXML::Document.new(xml)
+    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
+    
+    XPath.each(schema_doc, "//#{serializer}/schema-info") do |value_serializer|
+      parsed_schemas[value_serializer.attributes['version']] = value_serializer.text
+    end
+    
+    return parsed_schemas
   end
 
   def parse_nodes_from(xml)

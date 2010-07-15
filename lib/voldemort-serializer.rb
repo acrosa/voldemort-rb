@@ -2,7 +2,7 @@ require 'rubygems'
 require 'json'
 require 'voldemort-rb'
 
-class VoldemortSerializer
+class VoldemortJsonBinarySerializer
   attr_accessor :has_version
   attr_accessor :type_def_versions
   
@@ -20,7 +20,7 @@ class VoldemortSerializer
     
     # convert versioned json strings to ruby objects
     type_def_versions.each_pair do |version, json_type_def_version|
-      @type_def_versions[version] = get_type_def(json_type_def_version)
+      @type_def_versions[version.to_i] = get_type_def(json_type_def_version)
     end
   end
   
@@ -29,13 +29,6 @@ class VoldemortSerializer
     max_signed = 2 ** (bits - 1)
     to_signed = proc { |n| (n >= max_signed) ? n - max_unsigned : n }
     return to_signed[unsigned]
-  end
-  
-  def initialize(json_type_def_version, has_version)
-    @has_version = has_version
-    @type_def_versions = {
-      0 => get_type_def(json_type_def_version)
-    }
   end
   
   def get_type_def(json_type_def_version)
@@ -101,6 +94,8 @@ class VoldemortSerializer
         when 'date': bytes << write_date(object)
         when 'bytes': bytes << write_bytes(object)
         when 'boolean': bytes << write_boolean(object)
+        else
+          # TODO throw unsupported type exception
       end
     end
     
@@ -480,7 +475,7 @@ end
 
 # TESTING
 def get_serde(typedef)
-  return VoldemortSerializer.new(typedef, true)
+  return VoldemortJsonBinarySerializer.new({0 => typedef})
 end
 
 def double_invert(serde, object)
@@ -505,6 +500,19 @@ def assert(a, b)
   end
   
   puts "(#{a} == #{b}) = " + (a == b).to_s
+end
+
+class VoldemortPassThroughSerializer
+  def initialize(type_def_versions)
+  end
+  
+  def to_bytes(bytes)
+    return bytes
+  end
+  
+  def to_object(object)
+    return object
+  end
 end
 
 # test primitives
@@ -538,7 +546,7 @@ assert(double_invert(get_serde("['int32']"), nil), nil)
 assert(double_invert(get_serde("{'a': 'string'}"), nil), nil)
 
 v = VoldemortClient.new('json-test', 'localhost:6666')
-
+=begin
 kserde = get_serde("'int32'")
 vserde = get_serde("{
                 \"string\": 'string',
@@ -553,7 +561,7 @@ vserde = get_serde("{
                 \"date\": 'date',
                 'boolean': 'boolean'
 }")
-=begin
+
 v.put(kserde.to_bytes(1213), vserde.to_bytes({
                 "string" => 'a',
                 "int8" => 1,
@@ -567,7 +575,7 @@ v.put(kserde.to_bytes(1213), vserde.to_bytes({
                 "date" => Time.now,
                 'boolean' => true
 }))
-=end
+
 v.put(kserde.to_bytes(1213), vserde.to_bytes({
                 "string" => nil,
                 "int8" => nil,
@@ -581,7 +589,23 @@ v.put(kserde.to_bytes(1213), vserde.to_bytes({
                 "date" => nil,
                 'boolean' => nil
 }))
+=end
+#d = vserde.to_object(v.get(kserde.to_bytes(1213)))
+#d = JSON.generate(d)
+#puts "-- #{d}"
 
-d = vserde.to_object(v.get(kserde.to_bytes(1213)))
-d = JSON.generate(d)
-puts "-- #{d}"
+v.put(1213, {
+                "string" => 'a',
+                "int8" => 1,
+                "int16" => 1,
+                "int32" => 1,
+                "int64" => 1,
+                'float32' => 1,
+                'float64' => 1,
+                "list" => [1, 2],
+                'map' => {"key" => 'a'},
+                "date" => Time.now,
+                'boolean' => true
+})
+
+puts v.get(1213)
