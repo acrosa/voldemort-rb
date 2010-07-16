@@ -76,9 +76,8 @@ class Connection
   def parse_schema_from(xml, serializer = 'value-serializer')
     parsed_schemas = {}
     doc = REXML::Document.new(xml)
-    schema_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]")
     
-    XPath.each(schema_doc, "//#{serializer}/schema-info") do |value_serializer|
+    XPath.each(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/schema-info") do |value_serializer|
       parsed_schemas[value_serializer.attributes['version']] = value_serializer.text
     end
     
