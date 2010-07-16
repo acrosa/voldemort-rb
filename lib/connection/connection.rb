@@ -47,8 +47,8 @@ class Connection
     self.value_serializer_schemas = parse_schema_from(stores_xml, 'value-serializer')
     
     self.connect_to_random_node
-#  rescue StandardError => e
-#    raise("There was an error trying to bootstrap from the specified servers: #{e}")
+  rescue StandardError => e
+     raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
   
   def connect_to_random_node
