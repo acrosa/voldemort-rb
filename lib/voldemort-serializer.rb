@@ -470,3 +470,16 @@ class VoldemortJsonBinarySerializer
     end
   end
 end
+
+class VoldemortPassThroughSerializer
+	def initialize(map)
+	end
+	
+	def to_bytes(bytes)
+	  bytes
+	end
+	
+	def to_object(object)
+	  object
+	end
+end

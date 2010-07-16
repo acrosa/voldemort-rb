@@ -47,8 +47,8 @@ class Connection
     self.value_serializer_schemas = parse_schema_from(stores_xml, 'value-serializer')
     
     self.connect_to_random_node
-  rescue StandardError => e
-    raise("There was an error trying to bootstrap from the specified servers: #{e}")
+#  rescue StandardError => e
+#    raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
   
   def connect_to_random_node
@@ -64,7 +64,13 @@ class Connection
   
   def parse_schema_type(xml, serializer = 'value-serializer')
     doc = REXML::Document.new(xml)
-    return XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type").text
+    type_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type")
+    
+    if(type_doc != nil)
+      return type_doc.text
+    else
+      return nil
+    end
   end
   
   def parse_schema_from(xml, serializer = 'value-serializer')
