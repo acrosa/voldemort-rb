@@ -17,9 +17,14 @@ class VoldemortClient
     case(self.connection.key_serializer_type)
       when 'json'
         self.key_serializer = VoldemortJsonBinarySerializer.new(self.connection.key_serializer_schemas)
-        self.value_serializer = VoldemortJsonBinarySerializer.new(self.connection.value_serializer_schemas)
       else
         self.key_serializer = VoldemortPassThroughSerializer.new({})
+    end
+    
+    case(self.connection.value_serializer_type)
+      when 'json'
+        self.value_serializer = VoldemortJsonBinarySerializer.new(self.connection.value_serializer_schemas)
+      else
         self.value_serializer = VoldemortPassThroughSerializer.new({})
     end
   end
