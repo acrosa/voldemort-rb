@@ -1,8 +1,8 @@
-require 'rexml/document'
 require 'json'
+require 'nokogiri'
+
 
 class Connection
-  include REXML
 
   attr_accessor :hosts          # The hosts from where we bootstrapped.
   attr_accessor :nodes          # The array of VoldemortNodes available.
@@ -35,18 +35,22 @@ class Connection
 
   def bootstrap
     cluster_response = self.get_from("metadata", "cluster.xml", false)
-    cluster_xml = cluster_response[1][0][1]
-    self.nodes = self.parse_nodes_from(cluster_xml)
+    cluster_xml_doc = Nokogiri::XML(cluster_response[1][0][1])
+    self.nodes = self.parse_nodes_from(cluster_xml_doc)   
     
     stores_response = self.get_from("metadata", "stores.xml", false)
+
     stores_xml = stores_response[1][0][1]
     
-    self.key_serializer_type = parse_schema_type(stores_xml, 'key-serializer')
-    self.value_serializer_type = parse_schema_type(stores_xml, 'value-serializer')
-    self.key_serializer_schemas = parse_schema_from(stores_xml, 'key-serializer')
-    self.value_serializer_schemas = parse_schema_from(stores_xml, 'value-serializer')
-    
+    doc = Nokogiri::XML(stores_xml)
+  
+    self.key_serializer_type = self.parse_schema_type(doc, 'key-serializer') 
+    self.value_serializer_type = self.parse_schema_type(doc, 'value-serializer')
+    self.key_serializer_schemas = self.parse_schema_from(doc, 'key-serializer')
+    self.value_serializer_schemas = self.parse_schema_from(doc, 'value-serializer')
+     
     self.connect_to_random_node
+   
   rescue StandardError => e
      raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
@@ -62,39 +66,34 @@ class Connection
     end
   end
   
-  def parse_schema_type(xml, serializer = 'value-serializer')
-    doc = REXML::Document.new(xml)
-    type_doc = XPath.first(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type")
-    
+  def parse_schema_type(doc, serializer = 'value-serializer')
+    type_doc = doc.xpath("//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type")
     if(type_doc != nil)
       return type_doc.text
     else
       return nil
     end
-  end
+  end  
   
-  def parse_schema_from(xml, serializer = 'value-serializer')
+  def parse_schema_from(doc, serializer = 'value-serializer')
     parsed_schemas = {}
-    doc = REXML::Document.new(xml)
-    
-    XPath.each(doc, "//stores/store[name = \"#{self.db_name}\"]/#{serializer}/schema-info") do |value_serializer|
-      parsed_schemas[value_serializer.attributes['version']] = value_serializer.text
+    doc.xpath("//stores/store[name = \"#{self.db_name}\"]/#{serializer}/schema-info").each do |value_serializer|
+      parsed_schemas[value_serializer.attributes['version'].text] = value_serializer.text
     end
-    
     return parsed_schemas
-  end
-
-  def parse_nodes_from(xml)
+  end  
+  
+  
+  def parse_nodes_from(doc)
     nodes = []
-    doc = REXML::Document.new(xml)
-    XPath.each(doc, "/cluster/server").each do |n|
-      node = VoldemortNode.new
-      node.id   = n.elements["id"].text
-      node.host = n.elements["host"].text
-      node.port = n.elements["socket-port"].text
-      node.http_port  = n.elements["http-port"].text
-      node.admin_port = n.elements["admin-port"].text
-      node.partitions = n.elements["partitions"].text
+    doc.xpath("/cluster/server").each do |n|
+      node = VoldemortNode.new      
+      node.id = n.xpath("//id").text
+      node.host = n.xpath("//host").text
+      node.port = n.xpath("//socket-port").text
+      node.http_port = n.xpath("//http_port").text
+      node.admin_port = n.xpath("//admin-port").text
+      node.partitions = n.xpath("//partitions").text
       nodes << node
     end
     nodes
