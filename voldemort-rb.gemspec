@@ -25,6 +25,6 @@ Gem::Specification.new do |s|
        "spec/spec_helper.rb"
   ]
   s.require_paths = ["lib"]
-  spec.add_dependency('ruby_protobuf', '>= 0.3.3')
-  spec.add_dependency('nokogiri', '>= 1.4.3.1')
+  s.add_dependency('ruby_protobuf', '>= 0.3.3')
+  s.add_dependency('nokogiri', '>= 1.4.3.1')
 end
