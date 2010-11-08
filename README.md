@@ -1,15 +1,22 @@
 voldemort-rb
 ================
 
+# Installing the Gem from rubygems
+
+> sudo gem install voldemort-rb
+
+
 # Requirements
 
 Since the communication between the client and the server is done using protocol buffers you'll need the ruby_protobuf gem found at http://code.google.com/p/ruby-protobuf/. 
 
   sudo gem install ruby_protobuf
-  
-================
 
-# Building and Installing the Gem
+XML Parsing is done using Nokogiri
+
+  sudo gem install nokogiri
+
+# Building and Installing the Gem from source
 
 > gem build voldemort-rb.gemspec
 
