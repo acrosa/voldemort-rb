@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'voldemort-rb'
-  s.version = '0.1.2'
+  s.version = '0.1.3'
   s.summary = %{A Ruby client for the Voldemort distributed key value store}
   s.description = %Q{voldemort-rb allows you to connect to the Voldemort descentralized key value store.}
   s.authors = ["Alejandro Crosa"]
@@ -25,4 +25,6 @@ Gem::Specification.new do |s|
        "spec/spec_helper.rb"
   ]
   s.require_paths = ["lib"]
+  spec.add_dependency('ruby_protobuf', '>= 0.3.3')
+  spec.add_dependency('nokogiri', '>= 1.4.3.1')
 end
