@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/acrosa/voldemort-rb"
   s.files = [
        "CHANGELOG",
-       "MIT-LICENSE",
+       "LICENSE",
        "README.md",
        "Rakefile",
        "lib/voldemort-rb.rb",
