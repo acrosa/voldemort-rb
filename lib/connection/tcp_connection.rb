@@ -1,7 +1,7 @@
 require 'socket'
 require 'timeout'
 
-require File.join(File.dirname(__FILE__), "..", "protos", "voldemort-client.pb")
+require 'protos/voldemort-client.pb'
 
 class TCPConnection < Connection
   include Voldemort

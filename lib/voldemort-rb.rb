@@ -1,7 +1,10 @@
-require File.join(File.dirname(__FILE__), "connection", "voldemort_node")
-require File.join(File.dirname(__FILE__), "connection", "connection")
-require File.join(File.dirname(__FILE__), "connection", "tcp_connection")
-require File.join(File.dirname(__FILE__), "voldemort-serializer")
+libdir = File.dirname(__FILE__)
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
+require 'connection/voldemort_node' 
+require 'connection/connection' 
+require 'connection/tcp_connection' 
+require 'voldemort-serializer'
 
 class VoldemortClient
   attr_accessor :connection

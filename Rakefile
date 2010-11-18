@@ -6,7 +6,7 @@ require 'spec/rake/spectask'
 
 GEM = 'Voldemort Client'
 GEM_NAME = 'voldemort_client'
-GEM_VERSION = '0.1'
+GEM_VERSION = '0.1.4'
 AUTHORS = ['Alejandro Crosa']
 EMAIL = "alejandrocrosa@gmail.com"
 HOMEPAGE = "http://github.com/acrosa/Voldemort-Ruby-Client"
