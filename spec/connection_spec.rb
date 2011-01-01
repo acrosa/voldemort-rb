@@ -23,7 +23,8 @@ describe Connection do
     it "should parse nodes from xml" do
       @connection.should respond_to(:parse_nodes_from)
       xml = "<cluster>\r\n  <name>mycluster</name>\r\n  <server>\r\n    <id>0</id>\r\n    <host>localhost</host>\r\n    <http-port>8081</http-port>\r\n    <socket-port>6666</socket-port>\r\n    <admin-port>6667</admin-port>\r\n    <partitions>0, 1</partitions>\r\n  </server>\r\n</cluster>"
-      nodes = @connection.parse_nodes_from(xml)
+      doc = Nokogiri::XML(xml)
+      nodes = @connection.parse_nodes_from(doc)
       nodes.first.host.should eql("localhost")
       nodes.first.port.should eql("6666")
       nodes.length.should eql(1)

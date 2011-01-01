@@ -6,6 +6,8 @@ describe VoldemortClient do
 
   before(:each) do
     connection = mock(TCPConnection)
+    connection.stub!(:key_serializer_type).and_return("string")
+    connection.stub!(:value_serializer_type).and_return("string")
     node = mock(VoldemortNode)
     connection.stub!(:bootstrap).and_return(node)
     TCPConnection.stub!(:new).and_return(connection)

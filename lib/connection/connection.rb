@@ -1,6 +1,4 @@
-require 'json'
 require 'nokogiri'
-
 
 class Connection
 
@@ -36,25 +34,25 @@ class Connection
   def bootstrap
     cluster_response = self.get_from("metadata", "cluster.xml", false)
     cluster_xml_doc = Nokogiri::XML(cluster_response[1][0][1])
-    self.nodes = self.parse_nodes_from(cluster_xml_doc)   
-    
+    self.nodes = self.parse_nodes_from(cluster_xml_doc)
+
     stores_response = self.get_from("metadata", "stores.xml", false)
 
     stores_xml = stores_response[1][0][1]
-    
+
     doc = Nokogiri::XML(stores_xml)
-  
-    self.key_serializer_type = self.parse_schema_type(doc, 'key-serializer') 
+
+    self.key_serializer_type = self.parse_schema_type(doc, 'key-serializer')
     self.value_serializer_type = self.parse_schema_type(doc, 'value-serializer')
     self.key_serializer_schemas = self.parse_schema_from(doc, 'key-serializer')
     self.value_serializer_schemas = self.parse_schema_from(doc, 'value-serializer')
-     
+
     self.connect_to_random_node
-   
+
   rescue StandardError => e
      raise("There was an error trying to bootstrap from the specified servers: #{e}")
   end
-  
+
   def connect_to_random_node
     nodes = self.nodes.sort_by { rand }
     for node in nodes do
@@ -65,7 +63,7 @@ class Connection
       end
     end
   end
-  
+
   def parse_schema_type(doc, serializer = 'value-serializer')
     type_doc = doc.xpath("//stores/store[name = \"#{self.db_name}\"]/#{serializer}/type")
     if(type_doc != nil)
@@ -73,17 +71,16 @@ class Connection
     else
       return nil
     end
-  end  
-  
+  end
+
   def parse_schema_from(doc, serializer = 'value-serializer')
     parsed_schemas = {}
     doc.xpath("//stores/store[name = \"#{self.db_name}\"]/#{serializer}/schema-info").each do |value_serializer|
       parsed_schemas[value_serializer.attributes['version'].text] = value_serializer.text
     end
     return parsed_schemas
-  end  
-  
-  
+  end
+
   def parse_nodes_from(doc)
     nodes = []
     doc.xpath("/cluster/server").each do |n|
