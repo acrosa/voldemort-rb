@@ -28,7 +28,7 @@ class TCPConnection < Connection
     end
   end
 
-  def get_from(db_name, key, route = true)
+  def get_from(db_name, key, route = false)
     request = VoldemortRequest.new
     request.should_route = route
     request.store = db_name
@@ -43,7 +43,7 @@ class TCPConnection < Connection
     response
   end
 
-  def get_all_from(db_name, keys, route = true)
+  def get_all_from(db_name, keys, route = false)
     request = VoldemortRequest.new
     request.should_route = route
     request.store = db_name
@@ -58,7 +58,7 @@ class TCPConnection < Connection
     response
   end
 
-  def put_from(db_name, key, value, version = nil, route = true)
+  def put_from(db_name, key, value, version = nil, route = false)
     version = get_version(key) unless version
     request = VoldemortRequest.new
     request.should_route = route
