@@ -80,7 +80,7 @@ class TCPConnection < Connection
     version
   end
 
-  def delete_from(db_name, key, version = nil, route = true)
+  def delete_from(db_name, key, version = nil, route = false)
     version = get_version(key) unless version
     request = VoldemortRequest.new
     request.should_route = route
