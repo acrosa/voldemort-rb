@@ -83,7 +83,6 @@ class Connection
 
   def parse_nodes_from(doc)
     nodes = []
-    puts "DOC\n\n#{doc}"
     doc.xpath("/cluster/server").each do |n|
       node = VoldemortNode.new      
       node.id = n.xpath("id").text
