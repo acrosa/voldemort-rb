@@ -10,8 +10,8 @@ class VoldemortJsonBinarySerializer
   SHORT_MAX_VAL = 2 ** 15 - 1
   INT_MIN_VAL = -2147483648
   LONG_MIN_VAL = -9223372036854775808
-  FLOAT_MIN_VAL = 2 ** -149
-  DOUBLE_MIN_VAL = 2 ** -1074
+  FLOAT_MIN_VAL = 2.0 ** -149
+  DOUBLE_MIN_VAL = 2.0 ** -1074
   
   def initialize(type_def_versions)
     @has_version = true
@@ -137,7 +137,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == BYTE_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{BYTE_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = BYTE_MIN_VAL
@@ -153,7 +153,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == SHORT_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{SHORT_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = SHORT_MIN_VAL
@@ -169,7 +169,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == INT_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{INT_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = INT_MIN_VAL
@@ -187,7 +187,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == LONG_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{LONG_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = LONG_MIN_VAL
@@ -205,7 +205,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == FLOAT_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{FLOAT_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = FLOAT_MIN_VAL
@@ -221,7 +221,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == DOUBLE_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{DOUBLE_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         object = DOUBLE_MIN_VAL
@@ -237,7 +237,7 @@ class VoldemortJsonBinarySerializer
     bytes = ''
     
     if(object == LONG_MIN_VAL)
-      # TODO throw underflow exception
+      raise "Can't use '#{LONG_MIN_VAL}' because it is used to represent nil"
     else
       if(object == nil)
         bytes << write_int64(nil)
@@ -258,7 +258,7 @@ class VoldemortJsonBinarySerializer
       bytes << write_int16(object.length)
       bytes << object
     else
-      # TODO throw "length too long to serialize" exception
+      raise "length is too long to serialize"
     end
     
     return bytes
@@ -273,14 +273,14 @@ class VoldemortJsonBinarySerializer
       bytes << [1].pack('c')
       
       if(object.length != type.length)
-        # TODO throw exception here.. invalid map serialization, expected: but got 
+        raise "object length #{object.length} does not match type length #{type.length}"
       else
         type.sort.each do |type_pair|
           key = type_pair.first
           subtype = type_pair.last
           
           if(!object.has_key? key)
-            # TODO throw "missing property exception"
+            raise "object is missing key '#{key}'"
           else
             bytes << write(object[key], subtype)
           end
